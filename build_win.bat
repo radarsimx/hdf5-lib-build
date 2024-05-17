@@ -13,8 +13,8 @@ cmake --build . --config Release
 CD ..
 
 MD ".\hdf5lib"
-CD ".\hdf5lib\include"
-CD ".\hdf5lib\lib"
+MD ".\hdf5lib\include"
+MD ".\hdf5lib\lib"
 
 XCOPY ".\hdf5\c++\src\*.h" ".\hdf5lib\include\"
 XCOPY ".\hdf5\src\*.h" ".\hdf5lib\include\"
