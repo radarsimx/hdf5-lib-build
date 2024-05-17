@@ -2,8 +2,9 @@ name: Release on Windows x86_64
 
 on:
   push:
-    tags:
-      - "*"
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
