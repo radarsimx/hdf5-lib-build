@@ -26,4 +26,4 @@ cp ./hdf5/src/*.h ./hdf5lib/include/
 cp ./hdf5/src/H5FDsubfiling/*.h ./hdf5lib/include/
 cp ./build/src/*.h ./hdf5lib/include/
 
-cp ./build/bin/Release/*.a ./hdf5lib/lib/
+cp ./build/bin/*.a ./hdf5lib/lib/
