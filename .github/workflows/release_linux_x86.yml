@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        c_compiler: [gcc-12]
-        cxx_compiler: [g++-12]
+        c_compiler: [gcc-11]
+        cxx_compiler: [g++-11]
 
     steps:
       - uses: actions/checkout@v4
