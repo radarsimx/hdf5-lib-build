@@ -1,4 +1,4 @@
-name: Release on MacOS Apple Silicon
+name: Release on Linux x86_64
 
 on:
   push:
@@ -8,30 +8,27 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        c_compiler: [gcc-14]
-        cxx_compiler: [g++-14]
+        c_compiler: [gcc-11]
+        cxx_compiler: [g++-11]
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: maxim-lobanov/setup-xcode@v1.6.0
-        with:
-          # Version of Xcode to use
-          xcode-version: '15.4'
       - name: Build
         env:
           CC: ${{matrix.c_compiler}}
           CXX: ${{matrix.cxx_compiler}}
         run: |
-          chmod +x build_macos.sh
-          ./build_macos.sh
+          sudo chown -R $USER:$USER /home/runner/work/hdf5-lib-build
+          chmod +x build_linux.sh
+          ./build_linux.sh
       - name: Archive built module
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: hdf5lib_macos_arm64
+          name: hdf5lib_ubuntu_22_x86_64
           path: ./hdf5lib
