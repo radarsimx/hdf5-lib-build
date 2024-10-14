@@ -1,4 +1,4 @@
-name: Release on Linux x86_64
+name: Release on Ubuntu 24.04 x86_64
 
 on:
   push:
