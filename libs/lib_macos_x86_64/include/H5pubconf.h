@@ -144,7 +144,7 @@
 /* #undef H5_HAVE_FILTER_SZIP */
 
 /* Determine if _Float16 is available */
-/* #undef H5_HAVE__FLOAT16 */
+#define H5_HAVE__FLOAT16 1
 
 /* Determine if __float128 will be used in the Fortran wrappers */
 /* #undef H5_HAVE_FLOAT128 */
