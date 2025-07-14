@@ -41,10 +41,6 @@ GitHub Actions workflows are provided for automated builds on push or pull reque
 - Edit the build scripts to adjust CMake options or add dependencies as needed.
 - Update workflow files in `.github/workflows/` to add more platforms or change build matrix settings.
 
-## License
-
-See the root `LICENSE` file for license information.
-
 ---
 
 For more details, see the comments in each script and workflow file.
