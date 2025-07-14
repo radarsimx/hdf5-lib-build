@@ -18,12 +18,14 @@ This directory contains scripts and GitHub Actions workflows for building HDF5 s
 ### Local Build
 
 #### Linux / MacOS
+
 ```sh
 chmod +x build.sh
 ./build.sh
 ```
 
 #### Windows
+
 ```bat
 build.bat
 ```
@@ -35,11 +37,14 @@ The output will be placed in the `hdf5lib/` directory.
 GitHub Actions workflows are provided for automated builds on push or pull request to the `main` branch. Artifacts are uploaded for each platform and architecture.
 
 ## Customization
+
 - Edit the build scripts to adjust CMake options or add dependencies as needed.
 - Update workflow files in `.github/workflows/` to add more platforms or change build matrix settings.
 
 ## License
+
 See the root `LICENSE` file for license information.
 
 ---
+
 For more details, see the comments in each script and workflow file.
