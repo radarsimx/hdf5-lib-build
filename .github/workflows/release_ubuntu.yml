@@ -1,16 +1,16 @@
-name: "Release on Ubuntu 24.04 x86_64"
+name: "Release on Ubuntu x86_64 (22.04 & 24.04)"
 
 # =============================================================================
-# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 24.04 x86_64
+# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 22.04 & 24.04 x86_64
 #
-# This workflow builds the HDF5 static libraries and headers using the provided
-# build script, and uploads the resulting artifacts for use in downstream jobs or releases.
+# This workflow builds the HDF5 static libraries and headers for both Ubuntu 22.04 and 24.04
+# using the provided build script, and uploads the resulting artifacts for use in downstream jobs or releases.
 #
 # Triggers:
 #   - On push or pull request to the main branch
 #
 # Artifacts:
-#   - hdf5lib_ubuntu_24_x86_64: Contains the built static libraries and headers
+#   - hdf5lib_ubuntu_<version>_x86_64: Contains the built static libraries and headers for each Ubuntu version
 # =============================================================================
 
 on:
@@ -21,12 +21,17 @@ on:
 
 jobs:
   build:
-    name: "Build and Archive HDF5 Libraries"
-    runs-on: ubuntu-24.04
+    name: "Build and Archive HDF5 Libraries (${{ matrix.ubuntu_version }})"
+    runs-on: ${{ matrix.ubuntu_version }}
     strategy:
       matrix:
-        c_compiler: [gcc-14]
-        cxx_compiler: [g++-14]
+        include:
+          - ubuntu_version: ubuntu-22.04
+            c_compiler: gcc-11
+            cxx_compiler: g++-11
+          - ubuntu_version: ubuntu-24.04
+            c_compiler: gcc-14
+            cxx_compiler: g++-14
 
     steps:
       # Checkout repository with submodules
@@ -58,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: hdf5lib_ubuntu_24_x86_64
+          name: hdf5lib_${{ matrix.ubuntu_version }}_x86_64
           path: ./hdf5lib
           retention-days: 14  # Keep artifact for 14 days (default is 90)
 

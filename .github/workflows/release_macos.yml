@@ -1,16 +1,16 @@
-name: "Release on Ubuntu 22.04 x86_64"
+name: "Release on MacOS (x86_64 & Apple Silicon)"
 
 # =============================================================================
-# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 22.04 x86_64
+# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for MacOS x86_64 & Apple Silicon (arm64)
 #
-# This workflow builds the HDF5 static libraries and headers using the provided
-# build script, and uploads the resulting artifacts for use in downstream jobs or releases.
+# This workflow builds the HDF5 static libraries and headers for both MacOS x86_64 and Apple Silicon (arm64)
+# using the provided build script, and uploads the resulting artifacts for use in downstream jobs or releases.
 #
 # Triggers:
 #   - On push or pull request to the main branch
 #
 # Artifacts:
-#   - hdf5lib_ubuntu_22_x86_64: Contains the built static libraries and headers
+#   - hdf5lib_macos_<arch>: Contains the built static libraries and headers for each MacOS architecture
 # =============================================================================
 
 on:
@@ -21,12 +21,23 @@ on:
 
 jobs:
   build:
-    name: "Build and Archive HDF5 Libraries"
-    runs-on: ubuntu-22.04
+    name: "Build and Archive HDF5 Libraries (${{ matrix.name }})"
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        c_compiler: [gcc-11]
-        cxx_compiler: [g++-11]
+        include:
+          - name: macos_x86_64
+            runner: macos-13
+            c_compiler: gcc-14
+            cxx_compiler: g++-14
+            xcode_version: '15.2'
+            artifact: hdf5lib_macos_x86_64
+          - name: macos_arm64
+            runner: macos-15
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '16.3'
+            artifact: hdf5lib_macos_arm64
 
     steps:
       # Checkout repository with submodules
@@ -35,12 +46,18 @@ jobs:
         with:
           submodules: true
 
+      # Setup Xcode (required for some builds)
+      - name: "Setup Xcode"
+        uses: maxim-lobanov/setup-xcode@v1.6.0
+        with:
+          xcode-version: ${{ matrix.xcode_version }}
+
       # (Optional) Cache build dependencies for faster builds
       # - name: "Cache build dependencies"
       #   uses: actions/cache@v4
       #   with:
       #     path: |
-      #       ~/.cache
+      #       ~/Library/Caches
       #     key: ${{ runner.os }}-hdf5lib-${{ hashFiles('**/CMakeLists.txt') }}
 
       # Build the project
@@ -49,8 +66,6 @@ jobs:
           CC: ${{ matrix.c_compiler }}
           CXX: ${{ matrix.cxx_compiler }}
         run: |
-          # Ensure correct permissions for build directory
-          sudo chown -R $USER:$USER /home/runner/work/hdf5-lib-build
           chmod +x build.sh
           ./build.sh
 
@@ -59,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: hdf5lib_ubuntu_22_x86_64
+          name: ${{ matrix.artifact }}
           path: ./hdf5lib
           retention-days: 14  # Keep artifact for 14 days (default is 90)
 
