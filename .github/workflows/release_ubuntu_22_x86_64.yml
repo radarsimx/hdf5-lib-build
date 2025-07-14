@@ -1,4 +1,17 @@
-name: Release on Ubuntu 22.04 x86_64
+name: "Release on Ubuntu 22.04 x86_64"
+
+# =============================================================================
+# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 22.04 x86_64
+#
+# This workflow builds the HDF5 static libraries and headers using the provided
+# build script, and uploads the resulting artifacts for use in downstream jobs or releases.
+#
+# Triggers:
+#   - On push or pull request to the main branch
+#
+# Artifacts:
+#   - hdf5lib_ubuntu_22_x86_64: Contains the built static libraries and headers
+# =============================================================================
 
 on:
   push:
@@ -8,6 +21,7 @@ on:
 
 jobs:
   build:
+    name: "Build and Archive HDF5 Libraries"
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -15,20 +29,41 @@ jobs:
         cxx_compiler: [g++-11]
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout repository with submodules
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Build
+
+      # (Optional) Cache build dependencies for faster builds
+      # - name: "Cache build dependencies"
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.cache
+      #     key: ${{ runner.os }}-hdf5lib-${{ hashFiles('**/CMakeLists.txt') }}
+
+      # Build the project
+      - name: "Build HDF5 static libraries and headers"
         env:
-          CC: ${{matrix.c_compiler}}
-          CXX: ${{matrix.cxx_compiler}}
+          CC: ${{ matrix.c_compiler }}
+          CXX: ${{ matrix.cxx_compiler }}
         run: |
+          # Ensure correct permissions for build directory
           sudo chown -R $USER:$USER /home/runner/work/hdf5-lib-build
           chmod +x build.sh
           ./build.sh
-      - name: Archive built module
+
+      # Upload the built libraries and headers as an artifact
+      - name: "Archive built module"
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: hdf5lib_ubuntu_22_x86_64
           path: ./hdf5lib
+          retention-days: 14  # Keep artifact for 14 days (default is 90)
+
+      # (Optional) Add a step to verify the contents of the artifact
+      # - name: "List artifact contents"
+      #   run: |
+      #     ls -l ./hdf5lib

@@ -17,7 +17,7 @@ REM   - ./hdf5lib/include/  - Header files
 REM   - ./hdf5lib/lib/      - Static library files (.lib)
 REM
 REM Usage:
-REM   build_win.bat [clean]
+REM   build.bat [clean]
 REM
 REM Arguments:
 REM   clean   - Force clean build (removes all build artifacts)
