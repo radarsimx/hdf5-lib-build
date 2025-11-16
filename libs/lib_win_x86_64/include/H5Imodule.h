@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -22,11 +22,19 @@
  * reporting macros.
  */
 #define H5I_MODULE
-#define H5_MY_PKG     H5I
-#define H5_MY_PKG_ERR H5E_ID
+#define H5_MY_PKG      H5I
+#define H5_MY_PKG_ERR  H5E_ID
+#define H5_MY_PKG_INIT NO
 
 /** \page H5I_UG HDF5 Identifiers
+ *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * @todo Under Construction
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
  */
 
 /**

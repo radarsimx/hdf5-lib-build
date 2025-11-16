@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -22,10 +22,15 @@
  *      reporting macros.
  */
 #define H5ES_MODULE
-#define H5_MY_PKG     H5ES
-#define H5_MY_PKG_ERR H5E_EVENTSET
+#define H5_MY_PKG      H5ES
+#define H5_MY_PKG_ERR  H5E_EVENTSET
+#define H5_MY_PKG_INIT YES
 
 /** \page H5ES_UG HDF5 Event Set
+ *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * @todo Under Construction
  *
  * \section sec_async The HDF5 Event Set Interface
@@ -108,6 +113,9 @@
  * See the \ref H5ES APIs that were added to the HDF5 library to manage event sets.
  *
  * Previous Chapter \ref sec_vol - Next Chapter \ref sec_map
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
  *
  */
 

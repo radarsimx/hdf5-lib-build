@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -22,11 +22,16 @@
  *      reporting macros.
  */
 #define H5M_MODULE
-#define H5_MY_PKG     H5M
-#define H5_MY_PKG_ERR H5E_MAP
+#define H5_MY_PKG      H5M
+#define H5_MY_PKG_ERR  H5E_MAP
+#define H5_MY_PKG_INIT YES
 
 /**
  * \page H5M_UG HDF5 VOL Data Mapping
+ *
+ * Navigate back: \ref index "Main" / \ref UG
+ * <hr>
+ *
  * \Bold{The HDF5 Data Mapping can only be used with the HDF5 VOL connectors that
  * implement map objects.} The native HDF5 library does not support this feature.
  *
@@ -36,7 +41,10 @@
  *
  * \todo How does MAPL fit into \ref subsubsec_plist_class.
  *
- * Previous Chapter \ref sec_async - Next Chapter \ref sec_addition
+ * Previous Chapter \ref sec_async - Next Chapter \ref sec_reference
+ *
+ * <hr>
+ * Navigate back: \ref index "Main" / \ref UG
  *
  */
 
