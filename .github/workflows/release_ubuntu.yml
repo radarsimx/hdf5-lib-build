@@ -119,7 +119,7 @@ jobs:
             fi
           done
           
-          echo "\n✓ Build verification passed"
+          echo "\n[SUCCESS] Build verification passed"
 
       # -----------------------------------------------------------------------
       # Step 4: Upload build artifacts for downstream use

@@ -110,7 +110,7 @@ jobs:
             }
           }
           
-          Write-Host "`n✓ Build verification passed"
+          Write-Host "`n[SUCCESS] Build verification passed"
 
       # -----------------------------------------------------------------------
       # Step 4: Upload build artifacts for downstream use
