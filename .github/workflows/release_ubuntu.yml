@@ -1,4 +1,4 @@
-name: "Release on Ubuntu x86_64 (22.04 & 24.04)"
+name: "Release on Ubuntu x86_64"
 
 # =============================================================================
 # GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 22.04 & 24.04 x86_64
