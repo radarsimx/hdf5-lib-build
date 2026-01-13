@@ -27,7 +27,7 @@ REM ============================================================================
 REM Configuration
 set BUILD_TYPE=Release
 set BUILD_DIR=.\build
-set OUTPUT_DIR=.\hdf5lib
+set OUTPUT_DIR=.\release
 set HDF5_SOURCE_DIR=.\hdf5
 
 REM Check if CMake is available

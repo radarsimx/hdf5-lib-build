@@ -28,7 +28,7 @@ trap 'echo "Error: Command failed at line $LINENO: $BASH_COMMAND" >&2' ERR
 # ----------------------
 WORKPATH=$(pwd)                # Current working directory
 BUILD_DIR="build"              # Directory for CMake build output
-HDF5LIB_DIR="hdf5lib"          # Output directory for headers and libs
+RELEASE_DIR="release"          # Output directory for headers and libs
 HDF5_SRC="../hdf5"             # Path to HDF5 source directory
 
 # ----------------------
@@ -45,7 +45,7 @@ done
 # Clean previous builds
 # ----------------------
 echo "## Clean old build files ##"
-rm -rf "$BUILD_DIR" "$HDF5LIB_DIR"
+rm -rf "$BUILD_DIR" "$RELEASE_DIR"
 
 # ----------------------
 # Configure and build
@@ -75,19 +75,19 @@ cd "$WORKPATH"
 # Organize output files
 # ----------------------
 # Create output directories for headers and libraries
-install -d "$HDF5LIB_DIR/include" "$HDF5LIB_DIR/lib"
+install -d "$RELEASE_DIR/include" "$RELEASE_DIR/lib"
 
 # Copy header files from HDF5 and build output
-echo "## Copying header and library files to $HDF5LIB_DIR ##"
-install -m 644 ./hdf5/c++/src/*.h "$HDF5LIB_DIR/include/"
-install -m 644 ./hdf5/src/*.h "$HDF5LIB_DIR/include/"
-install -m 644 ./hdf5/src/H5FDsubfiling/*.h "$HDF5LIB_DIR/include/"
-install -m 644 ./build/src/*.h "$HDF5LIB_DIR/include/"
+echo "## Copying header and library files to $RELEASE_DIR ##"
+install -m 644 ./hdf5/c++/src/*.h "$RELEASE_DIR/include/"
+install -m 644 ./hdf5/src/*.h "$RELEASE_DIR/include/"
+install -m 644 ./hdf5/src/H5FDsubfiling/*.h "$RELEASE_DIR/include/"
+install -m 644 ./build/src/*.h "$RELEASE_DIR/include/"
 
 # Copy static library files
-install -m 644 ./build/bin/*.a "$HDF5LIB_DIR/lib/"
+install -m 644 ./build/bin/*.a "$RELEASE_DIR/lib/"
 
 # ----------------------
 # Completion message
 # ----------------------
-echo "Build completed successfully. Output in $HDF5LIB_DIR."
+echo "Build completed successfully. Output in $RELEASE_DIR."
