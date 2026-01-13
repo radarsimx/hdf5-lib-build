@@ -1,16 +1,36 @@
 name: "Release on Ubuntu x86_64"
 
 # =============================================================================
-# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu 22.04 & 24.04 x86_64
+# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for Ubuntu x86_64
 #
-# This workflow builds the HDF5 static libraries and headers for both Ubuntu 22.04 and 24.04
-# using the provided build script, and uploads the resulting artifacts for use in downstream jobs or releases.
+# This workflow automates the build process for HDF5 static libraries on Ubuntu,
+# including C and C++ libraries with high-level APIs. The workflow uses GCC
+# compiler toolchain and produces static libraries (.a files) suitable for
+# linking with RadarSimCpp project on Linux systems.
 #
-# Triggers:
-#   - On push or pull request to the main branch
+# Workflow Triggers:
+#   - push: When code is pushed to the main branch
+#   - pull_request: When a PR targets the main branch
 #
-# Artifacts:
-#   - hdf5lib_ubuntu_<version>_x86_64: Contains the built static libraries and headers for each Ubuntu version
+# Build Configuration:
+#   - Platform: Ubuntu 22.04 x86_64
+#   - Compiler: GCC 11 (gcc-11/g++-11)
+#   - Build Type: Release (configurable via build.sh arguments)
+#   - Output: Static libraries (.a) and header files
+#
+# Artifacts Produced:
+#   - Name: hdf5lib_ubuntu-{version}_x86_64
+#   - Contents:
+#       * ./output/lib_linux_x86_64/    - Static library files (.a)
+#       * ./output/include/             - Common C/C++ header files
+#       * ./output/include_linux_x86_64/ - Platform-specific generated headers
+#   - Retention: 14 days
+#
+# Libraries Built:
+#   - libhdf5.a        - Core HDF5 C library
+#   - libhdf5_cpp.a    - HDF5 C++ wrapper library
+#   - libhdf5_hl.a     - HDF5 High-Level C API
+#   - libhdf5_hl_cpp.a - HDF5 High-Level C++ API
 # =============================================================================
 
 on:
@@ -31,21 +51,28 @@ jobs:
             cxx_compiler: g++-11
 
     steps:
-      # Checkout repository with submodules
+      # -----------------------------------------------------------------------
+      # Step 1: Checkout repository with HDF5 source code
+      # -----------------------------------------------------------------------
+      # Retrieves the repository code including HDF5 source as a submodule.
+      # The 'submodules: true' ensures HDF5 source code is properly fetched.
       - name: "Checkout repository"
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      # (Optional) Cache build dependencies for faster builds
-      # - name: "Cache build dependencies"
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       ~/.cache
-      #     key: ${{ runner.os }}-hdf5lib-${{ hashFiles('**/CMakeLists.txt') }}
-
-      # Build the project
+      # -----------------------------------------------------------------------
+      # Step 2: Build HDF5 libraries using build script
+      # -----------------------------------------------------------------------
+      # Executes the build.sh script which:
+      # 1. Detects platform (Linux x86_64)
+      # 2. Configures CMake with appropriate HDF5 build options
+      # 3. Compiles HDF5 libraries using GCC in Release mode
+      # 4. Organizes output into structured directories
+      #
+      # Note: Permission fix ensures the workflow can write to work directory
+      # The script supports arguments: [clean] [debug]
+      # Default behavior: Release build without cleaning
       - name: "Build HDF5 static libraries and headers"
         env:
           CC: ${{ matrix.c_compiler }}
@@ -55,7 +82,58 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
-      # Upload the built libraries and headers as an artifact
+      # -----------------------------------------------------------------------
+      # Step 3: Verify build artifacts and output structure
+      # -----------------------------------------------------------------------
+      # Performs validation checks to ensure build completed successfully:
+      # 1. Confirms output directory exists
+      # 2. Lists all library files for inspection
+      # 3. Displays header files (first 20 for brevity)
+      # 4. Verifies all 4 required libraries are present
+      # 5. Fails the workflow if any library is missing
+      #
+      # This step helps catch build issues early before artifact upload.
+      - name: "Verify build artifacts"
+        run: |
+          echo "=== Verifying build output ==="
+          
+          # Check if output directory exists
+          if [ ! -d "./output" ]; then
+            echo "ERROR: Output directory not found"
+            exit 1
+          fi
+          
+          # Display library files
+          echo "\n=== Library files ==="
+          ls -lh ./output/lib_*/
+          
+          # Display header files (limited to first 20)
+          echo "\n=== Header files ==="
+          ls -lh ./output/include/ | head -20
+          
+          # Verify all required libraries are present
+          for lib in libhdf5.a libhdf5_cpp.a libhdf5_hl.a libhdf5_hl_cpp.a; do
+            if ! find ./output/lib_*/ -name "$lib" | grep -q .; then
+              echo "ERROR: Required library $lib not found"
+              exit 1
+            fi
+          done
+          
+          echo "\n✓ Build verification passed"
+
+      # -----------------------------------------------------------------------
+      # Step 4: Upload build artifacts for downstream use
+      # -----------------------------------------------------------------------
+      # Packages the build output as a GitHub Actions artifact:
+      # - Artifact name: hdf5lib_{ubuntu_version}_x86_64
+      # - Contents: Complete output directory with libs and headers
+      # - Retention: 14 days (saves storage compared to 90-day default)
+      # - Compression: Level 6 (balanced speed vs size)
+      #
+      # This artifact can be:
+      # - Downloaded by developers for local use
+      # - Used by other workflows/jobs as a dependency
+      # - Attached to GitHub releases
       - name: "Archive built module"
         uses: actions/upload-artifact@v4
         if: success()
@@ -63,3 +141,4 @@ jobs:
           name: hdf5lib_${{ matrix.ubuntu_version }}_x86_64
           path: ./output
           retention-days: 14  # Keep artifact for 14 days (default is 90)
+          compression-level: 6  # Balance between speed and size

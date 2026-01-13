@@ -1,16 +1,47 @@
 name: "Release on MacOS (x86_64 & Apple Silicon)"
 
 # =============================================================================
-# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for MacOS x86_64 & Apple Silicon (arm64)
+# GitHub Actions Workflow: Build and Release HDF5 Static Libraries for MacOS
 #
-# This workflow builds the HDF5 static libraries and headers for both MacOS x86_64 and Apple Silicon (arm64)
-# using the provided build script, and uploads the resulting artifacts for use in downstream jobs or releases.
+# This workflow automates the build process for HDF5 static libraries on macOS
+# for both Intel (x86_64) and Apple Silicon (arm64) architectures. The workflow
+# uses appropriate compilers for each architecture and produces static libraries
+# (.a files) suitable for linking with RadarSimCpp project on macOS systems.
 #
-# Triggers:
-#   - On push or pull request to the main branch
+# Workflow Triggers:
+#   - push: When code is pushed to the main branch
+#   - pull_request: When a PR targets the main branch
 #
-# Artifacts:
-#   - hdf5lib_macos_<arch>: Contains the built static libraries and headers for each MacOS architecture
+# Build Matrix:
+#   Two parallel builds for different architectures:
+#
+#   1. macOS x86_64 (Intel):
+#      - Runner: macos-15-intel
+#      - Compiler: GCC 14 (gcc-14/g++-14)
+#      - Xcode: 16.4
+#
+#   2. macOS arm64 (Apple Silicon):
+#      - Runner: macos-15
+#      - Compiler: Clang (clang/clang++)
+#      - Xcode: 16.4
+#
+# Build Configuration:
+#   - Build Type: Release (configurable via build.sh arguments)
+#   - Output: Static libraries (.a) and header files
+#
+# Artifacts Produced:
+#   - Names: hdf5lib_macos_x86_64, hdf5lib_macos_arm64
+#   - Contents:
+#       * ./output/lib_macos_{arch}/    - Static library files (.a)
+#       * ./output/include/             - Common C/C++ header files
+#       * ./output/include_macos_{arch}/ - Platform-specific generated headers
+#   - Retention: 14 days
+#
+# Libraries Built:
+#   - libhdf5.a        - Core HDF5 C library
+#   - libhdf5_cpp.a    - HDF5 C++ wrapper library
+#   - libhdf5_hl.a     - HDF5 High-Level C API
+#   - libhdf5_hl_cpp.a - HDF5 High-Level C++ API
 # =============================================================================
 
 on:
@@ -40,27 +71,42 @@ jobs:
             artifact: hdf5lib_macos_arm64
 
     steps:
-      # Checkout repository with submodules
+      # -----------------------------------------------------------------------
+      # Step 1: Checkout repository with HDF5 source code
+      # -----------------------------------------------------------------------
+      # Retrieves the repository code including HDF5 source as a submodule.
+      # The 'submodules: true' ensures HDF5 source code is properly fetched.
       - name: "Checkout repository"
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      # Setup Xcode (required for some builds)
+      # -----------------------------------------------------------------------
+      # Step 2: Setup Xcode development environment
+      # -----------------------------------------------------------------------
+      # Configures the Xcode version to ensure consistent build environment
+      # and access to required SDK features. This is especially important
+      # for Apple Silicon builds which require newer SDK capabilities.
       - name: "Setup Xcode"
         uses: maxim-lobanov/setup-xcode@v1.6.0
         with:
           xcode-version: ${{ matrix.xcode_version }}
 
-      # (Optional) Cache build dependencies for faster builds
-      # - name: "Cache build dependencies"
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       ~/Library/Caches
-      #     key: ${{ runner.os }}-hdf5lib-${{ hashFiles('**/CMakeLists.txt') }}
-
-      # Build the project
+      # -----------------------------------------------------------------------
+      # Step 3: Build HDF5 libraries using build script
+      # -----------------------------------------------------------------------
+      # Executes the build.sh script which:
+      # 1. Auto-detects platform (macos_x86_64 or macos_arm64)
+      # 2. Configures CMake with appropriate HDF5 build options
+      # 3. Compiles HDF5 libraries using specified compiler
+      # 4. Organizes output into architecture-specific directories
+      #
+      # Compiler selection:
+      # - x86_64: GCC 14 for compatibility and optimization
+      # - arm64:  Clang for native Apple Silicon support
+      #
+      # The script supports arguments: [clean] [debug]
+      # Default behavior: Release build without cleaning
       - name: "Build HDF5 static libraries and headers"
         env:
           CC: ${{ matrix.c_compiler }}
@@ -69,7 +115,59 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
-      # Upload the built libraries and headers as an artifact
+      # -----------------------------------------------------------------------
+      # Step 4: Verify build artifacts and output structure
+      # -----------------------------------------------------------------------
+      # Performs validation checks to ensure build completed successfully:
+      # 1. Confirms output directory exists
+      # 2. Lists all library files for inspection
+      # 3. Displays header files (first 20 for brevity)
+      # 4. Verifies all 4 required libraries are present
+      # 5. Fails the workflow if any library is missing
+      #
+      # This step helps catch build issues early before artifact upload.
+      - name: "Verify build artifacts"
+        run: |
+          echo "=== Verifying build output ==="
+          
+          # Check if output directory exists
+          if [ ! -d "./output" ]; then
+            echo "ERROR: Output directory not found"
+            exit 1
+          fi
+          
+          # Display library files
+          echo "\n=== Library files ==="
+          ls -lh ./output/lib_*/
+          
+          # Display header files (limited to first 20)
+          echo "\n=== Header files ==="
+          ls -lh ./output/include/ | head -20
+          
+          # Verify all required libraries are present
+          for lib in libhdf5.a libhdf5_cpp.a libhdf5_hl.a libhdf5_hl_cpp.a; do
+            if ! find ./output/lib_*/ -name "$lib" | grep -q .; then
+              echo "ERROR: Required library $lib not found"
+              exit 1
+            fi
+          done
+          
+          echo "\n✓ Build verification passed"
+
+      # -----------------------------------------------------------------------
+      # Step 5: Upload build artifacts for downstream use
+      # -----------------------------------------------------------------------
+      # Packages the build output as a GitHub Actions artifact:
+      # - Artifact name: hdf5lib_macos_{x86_64|arm64}
+      # - Contents: Complete output directory with libs and headers
+      # - Retention: 14 days (saves storage compared to 90-day default)
+      # - Compression: Level 6 (balanced speed vs size)
+      #
+      # This artifact can be:
+      # - Downloaded by developers for local use
+      # - Used by other workflows/jobs as a dependency
+      # - Attached to GitHub releases
+      # - Combined with other architecture builds for universal binaries
       - name: "Archive built module"
         uses: actions/upload-artifact@v4
         if: success()
@@ -77,3 +175,4 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ./output
           retention-days: 14  # Keep artifact for 14 days (default is 90)
+          compression-level: 6  # Balance between speed and size
