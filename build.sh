@@ -94,7 +94,7 @@ cd "$WORKPATH"
 # Organize output files
 # ----------------------
 # Create output directories for headers and libraries
-install -d "$RELEASE_DIR/include" $RELEASE_DIR/include_${PLATFORM}" "$RELEASE_DIR/lib_${PLATFORM}"
+install -d "$RELEASE_DIR/include" "$RELEASE_DIR/include_${PLATFORM}" "$RELEASE_DIR/lib_${PLATFORM}"
 
 # Copy header files from HDF5 and build output
 echo "## Copying header and library files to $RELEASE_DIR ##"
