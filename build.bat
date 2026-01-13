@@ -143,15 +143,15 @@ if %errorlevel% neq 0 (
     echo WARNING: Some subfiling header files may not have been copied
 )
 
-xcopy /y /q "%HDF5_SOURCE_DIR%\hl\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
-if %errorlevel% neq 0 (
-    echo WARNING: Some high-level header files may not have been copied
-)
+@REM xcopy /y /q "%HDF5_SOURCE_DIR%\hl\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
+@REM if %errorlevel% neq 0 (
+@REM     echo WARNING: Some high-level header files may not have been copied
+@REM )
 
-xcopy /y /q "%HDF5_SOURCE_DIR%\hl\c++\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
-if %errorlevel% neq 0 (
-    echo WARNING: Some high-level C++ header files may not have been copied
-)
+@REM xcopy /y /q "%HDF5_SOURCE_DIR%\hl\c++\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
+@REM if %errorlevel% neq 0 (
+@REM     echo WARNING: Some high-level C++ header files may not have been copied
+@REM )
 
 xcopy /y /q "%BUILD_DIR%\src\*.h" "%OUTPUT_DIR%\include_%PLATFORM%\" 2>nul
 if %errorlevel% neq 0 (
