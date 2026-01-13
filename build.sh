@@ -6,7 +6,17 @@
 # the HDF5 static libraries and headers for use with radarsimpy.
 #
 # Usage:
-#   ./build.sh
+#   ./build.sh [options]
+#
+# Arguments:
+#   clean   - Force clean build (removes all build artifacts)
+#   debug   - Build in Debug mode (default is Release)
+#
+# Examples:
+#   ./build.sh              - Release build
+#   ./build.sh debug        - Debug build
+#   ./build.sh clean        - Clean Release build
+#   ./build.sh clean debug  - Clean Debug build
 #
 # Requirements:
 #   - bash shell
@@ -28,8 +38,29 @@ trap 'echo "Error: Command failed at line $LINENO: $BASH_COMMAND" >&2' ERR
 # ----------------------
 WORKPATH=$(pwd)                # Current working directory
 BUILD_DIR="build"              # Directory for CMake build output
-RELEASE_DIR="release"          # Output directory for headers and libs
+RELEASE_DIR="output"          # Output directory for headers and libs
 HDF5_SRC="../hdf5"             # Path to HDF5 source directory
+BUILD_TYPE="Release"           # Default build type (Release or Debug)
+FORCE_CLEAN=0                  # Clean build flag
+
+# Parse command line arguments
+for arg in "$@"; do
+    case "$arg" in
+        clean)
+            FORCE_CLEAN=1
+            echo "Force clean build requested"
+            ;;
+        debug)
+            BUILD_TYPE="Debug"
+            echo "Debug build requested"
+            ;;
+        *)
+            echo "Unknown argument: $arg"
+            echo "Usage: $0 [clean] [debug]"
+            exit 1
+            ;;
+    esac
+done
 
 # Detect OS and architecture
 OS_TYPE=$(uname -s)
@@ -49,6 +80,7 @@ case "$OS_TYPE" in
 esac
 
 echo "Detected platform: $PLATFORM"
+echo "Build type: $BUILD_TYPE"
 
 # ----------------------
 # Check for dependencies
@@ -74,7 +106,7 @@ mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # Configure the project with CMake
-cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+cmake -DCMAKE_BUILD_TYPE:STRING=$BUILD_TYPE \
       -DBUILD_SHARED_LIBS:BOOL=OFF \
       -DBUILD_TESTING:BOOL=OFF \
       -DHDF5_BUILD_TOOLS:BOOL=OFF \

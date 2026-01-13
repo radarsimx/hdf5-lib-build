@@ -17,21 +17,45 @@ REM   - ./hdf5lib/include/  - Header files
 REM   - ./hdf5lib/lib/      - Static library files (.lib)
 REM
 REM Usage:
-REM   build.bat [clean]
+REM   build.bat [options]
 REM
 REM Arguments:
 REM   clean   - Force clean build (removes all build artifacts)
+REM   debug   - Build in Debug mode (default is Release)
+REM
+REM Examples:
+REM   build.bat              - Release build
+REM   build.bat debug        - Debug build
+REM   build.bat clean        - Clean Release build
+REM   build.bat clean debug  - Clean Debug build
 REM
 REM ==============================================================================
 
-REM Configuration
+REM Configuration - defaults
 set BUILD_TYPE=Release
 set BUILD_DIR=.\build
-set OUTPUT_DIR=.\release
+set OUTPUT_DIR=.\output
 set HDF5_SOURCE_DIR=.\hdf5
 set PLATFORM=win_x86_64
+set FORCE_CLEAN=
+
+REM Parse command line arguments
+:parse_args
+if "%1"=="" goto done_args
+if /i "%1"=="clean" (
+    set FORCE_CLEAN=1
+    echo INFO: Force clean build requested
+)
+if /i "%1"=="debug" (
+    set BUILD_TYPE=Debug
+    echo INFO: Debug build requested
+)
+shift
+goto parse_args
+:done_args
 
 echo INFO: Platform: %PLATFORM%
+echo INFO: Build type: %BUILD_TYPE%
 
 REM Check if CMake is available
 cmake --version >nul 2>&1
@@ -46,12 +70,6 @@ if not exist "%HDF5_SOURCE_DIR%" (
     echo ERROR: HDF5 source directory not found: %HDF5_SOURCE_DIR%
     echo Please ensure HDF5 source code is available
     exit /b 1
-)
-
-REM Handle command line arguments
-if "%1"=="clean" (
-    set FORCE_CLEAN=1
-    echo INFO: Force clean build requested
 )
 
 REM Clean old build files
@@ -142,16 +160,6 @@ xcopy /y /q "%HDF5_SOURCE_DIR%\src\H5FDsubfiling\*.h" "%OUTPUT_DIR%\include\" 2>
 if %errorlevel% neq 0 (
     echo WARNING: Some subfiling header files may not have been copied
 )
-
-@REM xcopy /y /q "%HDF5_SOURCE_DIR%\hl\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
-@REM if %errorlevel% neq 0 (
-@REM     echo WARNING: Some high-level header files may not have been copied
-@REM )
-
-@REM xcopy /y /q "%HDF5_SOURCE_DIR%\hl\c++\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
-@REM if %errorlevel% neq 0 (
-@REM     echo WARNING: Some high-level C++ header files may not have been copied
-@REM )
 
 xcopy /y /q "%BUILD_DIR%\src\*.h" "%OUTPUT_DIR%\include_%PLATFORM%\" 2>nul
 if %errorlevel% neq 0 (
