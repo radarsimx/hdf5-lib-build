@@ -29,6 +29,9 @@ set BUILD_TYPE=Release
 set BUILD_DIR=.\build
 set OUTPUT_DIR=.\release
 set HDF5_SOURCE_DIR=.\hdf5
+set PLATFORM=win_x86_64
+
+echo INFO: Platform: %PLATFORM%
 
 REM Check if CMake is available
 cmake --version >nul 2>&1
@@ -120,7 +123,8 @@ REM Create output directory structure
 echo INFO: Creating output directory structure...
 mkdir "%OUTPUT_DIR%" 2>nul
 mkdir "%OUTPUT_DIR%\include" 2>nul
-mkdir "%OUTPUT_DIR%\lib" 2>nul
+mkdir "%OUTPUT_DIR%\include_%PLATFORM%" 2>nul
+mkdir "%OUTPUT_DIR%\lib_%PLATFORM%" 2>nul
 
 REM Copy header files
 echo INFO: Copying header files...
@@ -149,14 +153,14 @@ if %errorlevel% neq 0 (
     echo WARNING: Some high-level C++ header files may not have been copied
 )
 
-xcopy /y /q "%BUILD_DIR%\src\*.h" "%OUTPUT_DIR%\include\" 2>nul
+xcopy /y /q "%BUILD_DIR%\src\*.h" "%OUTPUT_DIR%\include_%PLATFORM%\" 2>nul
 if %errorlevel% neq 0 (
     echo WARNING: Some generated header files may not have been copied
 )
 
 REM Copy library files
 echo INFO: Copying library files...
-xcopy /y /q "%BUILD_DIR%\bin\%BUILD_TYPE%\*.lib" "%OUTPUT_DIR%\lib\" 2>nul
+xcopy /y /q "%BUILD_DIR%\bin\%BUILD_TYPE%\*.lib" "%OUTPUT_DIR%\lib_%PLATFORM%\" 2>nul
 if %errorlevel% neq 0 (
     echo ERROR: Failed to copy library files
     exit /b 1
@@ -165,7 +169,7 @@ if %errorlevel% neq 0 (
 REM Verify output
 echo INFO: Verifying build output...
 set LIB_COUNT=0
-for %%f in ("%OUTPUT_DIR%\lib\*.lib") do (
+for %%f in ("%OUTPUT_DIR%\lib_%PLATFORM%\*.lib") do (
     set /a LIB_COUNT+=1
 )
 
@@ -175,8 +179,8 @@ if %LIB_COUNT% equ 0 (
 )
 
 echo INFO: Build completed successfully!
-echo INFO: Libraries: %LIB_COUNT% files in %OUTPUT_DIR%\lib\
-echo INFO: Headers: Available in %OUTPUT_DIR%\include\
+echo INFO: Libraries: %LIB_COUNT% files in %OUTPUT_DIR%\lib_%PLATFORM%\
+echo INFO: Headers: Available in %OUTPUT_DIR%\include\ and %OUTPUT_DIR%\include_%PLATFORM%\
 echo INFO: Build artifacts: %BUILD_DIR%\
 
 exit /b 0

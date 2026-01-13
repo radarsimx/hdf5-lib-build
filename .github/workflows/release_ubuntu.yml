@@ -29,9 +29,6 @@ jobs:
           - ubuntu_version: ubuntu-22.04
             c_compiler: gcc-11
             cxx_compiler: g++-11
-          - ubuntu_version: ubuntu-24.04
-            c_compiler: gcc-13
-            cxx_compiler: g++-13
 
     steps:
       # Checkout repository with submodules
@@ -64,10 +61,10 @@ jobs:
         if: success()
         with:
           name: hdf5lib_${{ matrix.ubuntu_version }}_x86_64
-          path: ./hdf5lib
+          path: ./release
           retention-days: 14  # Keep artifact for 14 days (default is 90)
 
       # (Optional) Add a step to verify the contents of the artifact
       # - name: "List artifact contents"
       #   run: |
-      #     ls -l ./hdf5lib
+      #     ls -l ./release

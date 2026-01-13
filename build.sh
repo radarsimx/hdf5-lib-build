@@ -31,6 +31,25 @@ BUILD_DIR="build"              # Directory for CMake build output
 RELEASE_DIR="release"          # Output directory for headers and libs
 HDF5_SRC="../hdf5"             # Path to HDF5 source directory
 
+# Detect OS and architecture
+OS_TYPE=$(uname -s)
+ARCH_TYPE=$(uname -m)
+
+case "$OS_TYPE" in
+    Linux*)
+        PLATFORM="linux_${ARCH_TYPE}"
+        ;;
+    Darwin*)
+        if [ "$ARCH_TYPE" = "arm64" ]; then
+            PLATFORM="macos_arm64"
+        else
+            PLATFORM="macos_x86_64"
+        fi
+        ;;
+esac
+
+echo "Detected platform: $PLATFORM"
+
 # ----------------------
 # Check for dependencies
 # ----------------------
@@ -75,17 +94,17 @@ cd "$WORKPATH"
 # Organize output files
 # ----------------------
 # Create output directories for headers and libraries
-install -d "$RELEASE_DIR/include" "$RELEASE_DIR/lib"
+install -d "$RELEASE_DIR/include" $RELEASE_DIR/include_${PLATFORM}" "$RELEASE_DIR/lib_${PLATFORM}"
 
 # Copy header files from HDF5 and build output
 echo "## Copying header and library files to $RELEASE_DIR ##"
 install -m 644 ./hdf5/c++/src/*.h "$RELEASE_DIR/include/"
 install -m 644 ./hdf5/src/*.h "$RELEASE_DIR/include/"
 install -m 644 ./hdf5/src/H5FDsubfiling/*.h "$RELEASE_DIR/include/"
-install -m 644 ./build/src/*.h "$RELEASE_DIR/include/"
+install -m 644 ./build/src/*.h "$RELEASE_DIR/include_${PLATFORM}/"
 
 # Copy static library files
-install -m 644 ./build/bin/*.a "$RELEASE_DIR/lib/"
+install -m 644 ./build/bin/*.a "$RELEASE_DIR/lib_${PLATFORM}/"
 
 # ----------------------
 # Completion message
