@@ -63,8 +63,3 @@ jobs:
           name: hdf5lib_${{ matrix.ubuntu_version }}_x86_64
           path: ./output
           retention-days: 14  # Keep artifact for 14 days (default is 90)
-
-      # (Optional) Add a step to verify the contents of the artifact
-      # - name: "List artifact contents"
-      #   run: |
-      #     ls -l ./output

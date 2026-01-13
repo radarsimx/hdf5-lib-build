@@ -157,12 +157,12 @@ GitHub Actions workflows are provided for automated builds on push or pull reque
 
 #### Build Matrix
 
-| Workflow | Platform | Artifact Name | Retention |
-|----------|----------|---------------|-----------|
-| `release_ubuntu.yml` | Ubuntu 22.04 x86_64 | `hdf5lib_ubuntu-22.04_x86_64` | 14 days |
-| `release_windows.yml` | Windows x86_64 | `hdf5lib_win_x86_64` | 14 days |
-| `release_macos.yml` | macOS x86_64 (Intel) | `hdf5lib_macos_x86_64` | 14 days |
-| `release_macos.yml` | macOS arm64 (Apple Silicon) | `hdf5lib_macos_arm64` | 14 days |
+| Workflow | Platform | Artifact Name |
+|----------|----------|---------------|
+| `release_ubuntu.yml` | Ubuntu 22.04 x86_64 | `hdf5lib_ubuntu-22.04_x86_64` |
+| `release_windows.yml` | Windows x86_64 | `hdf5lib_win_x86_64` |
+| `release_macos.yml` | macOS x86_64 (Intel) | `hdf5lib_macos_x86_64` |
+| `release_macos.yml` | macOS arm64 (Apple Silicon) | `hdf5lib_macos_arm64` |
 
 ## Customization
 
