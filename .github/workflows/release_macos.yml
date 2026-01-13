@@ -27,16 +27,16 @@ jobs:
       matrix:
         include:
           - name: macos_x86_64
-            runner: macos-13
+            runner: macos-15-intel
             c_compiler: gcc-14
             cxx_compiler: g++-14
-            xcode_version: '15.2'
+            xcode_version: '16.4'
             artifact: hdf5lib_macos_x86_64
           - name: macos_arm64
             runner: macos-15
             c_compiler: clang
             cxx_compiler: clang++
-            xcode_version: '16.3'
+            xcode_version: '16.4'
             artifact: hdf5lib_macos_arm64
 
     steps:
