@@ -16,14 +16,14 @@ name: "Release on MacOS (x86_64 & Apple Silicon)"
 #   Two parallel builds for different architectures:
 #
 #   1. macOS x86_64 (Intel):
-#      - Runner: macos-15-intel
-#      - Compiler: GCC 14 (gcc-14/g++-14)
-#      - Xcode: 16.4
+#      - Runner: macos-26-intel
+#      - Compiler: Clang (clang/clang++)
+#      - Xcode: 26.4.1
 #
 #   2. macOS arm64 (Apple Silicon):
-#      - Runner: macos-15
+#      - Runner: macos-26
 #      - Compiler: Clang (clang/clang++)
-#      - Xcode: 16.4
+#      - Xcode: 26.4.1
 #
 # Build Configuration:
 #   - Build Type: Release (configurable via build.sh arguments)
@@ -58,16 +58,16 @@ jobs:
       matrix:
         include:
           - name: macos_x86_64
-            runner: macos-15-intel
-            c_compiler: gcc-14
-            cxx_compiler: g++-14
-            xcode_version: '16.4'
-            artifact: hdf5lib_macos_x86_64
-          - name: macos_arm64
-            runner: macos-15
+            runner: macos-26-intel
             c_compiler: clang
             cxx_compiler: clang++
-            xcode_version: '16.4'
+            xcode_version: '26.4.1'
+            artifact: hdf5lib_macos_x86_64
+          - name: macos_arm64
+            runner: macos-26
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '26.4.1'
             artifact: hdf5lib_macos_arm64
 
     steps:
