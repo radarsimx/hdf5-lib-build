@@ -66,8 +66,8 @@ libs/
 | Platform | Architecture | Library Format | Runner | Compiler | Notes |
 |----------|--------------|----------------|--------|----------|-------|
 | Linux (Ubuntu 22.04) | x86_64 | `.a` (static) | `ubuntu-22.04` | GCC 11 (`gcc-11`/`g++-11`) | |
-| macOS | x86_64 (Intel) | `.a` (static) | `macos-15-intel` | GCC 14 (`gcc-14`/`g++-14`) | Xcode 16.4 |
-| macOS | arm64 (Apple Silicon) | `.a` (static) | `macos-15` | Clang (`clang`/`clang++`) | Xcode 16.4 |
+| macOS | x86_64 (Intel) | `.a` (static) | `macos-26-intel` | Clang (`clang`/`clang++`) | Xcode 26.4.1 |
+| macOS | arm64 (Apple Silicon) | `.a` (static) | `macos-26` | Clang (`clang`/`clang++`) | Xcode 26.4.1 |
 | Windows | x86_64 | `.lib` (static) | `windows-2025` | MSVC | Visual Studio |
 
 ## Usage
