@@ -51,7 +51,7 @@ jobs:
       # Retrieves the repository code including HDF5 source as a submodule.
       # The 'submodules: true' ensures HDF5 source code is properly fetched.
       - name: "Checkout repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
 
