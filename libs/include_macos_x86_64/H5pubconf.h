@@ -384,7 +384,7 @@
 /* #undef H5_DIMENSION_SCALES_WITH_NEW_REF */
 
 /* Define if your system can convert long double to _Float16 values correctly. */
-#define H5_LDOUBLE_TO_FLOAT16_CORRECT 1
+/* #undef H5_LDOUBLE_TO_FLOAT16_CORRECT */
 
 /* Define if your system can convert long double to (unsigned) long long
    values correctly. */
