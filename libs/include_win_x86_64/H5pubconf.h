@@ -27,7 +27,7 @@
 #define H5_HAVE_VISUAL_STUDIO 1
 
 /* Define the default plugins path to compile */
-#define H5_DEFAULT_PLUGINDIR "C:/Program Files/HDF_Group/HDF5/2.0.0\\lib\\plugin;%ALLUSERSPROFILE%\\hdf5\\lib\\plugin"
+#define H5_DEFAULT_PLUGINDIR "C:/Program Files/HDF_Group/HDF5/2.1.1\\lib\\plugin;%ALLUSERSPROFILE%\\hdf5\\lib\\plugin"
 
 /* Define if your system is IBM ppc64le and cannot convert some long double
    values correctly. */
@@ -418,7 +418,7 @@
 #define H5_PACKAGE_NAME "HDF5"
 
 /* Define to the full name and version of this package. */
-#define H5_PACKAGE_STRING "HDF5 2.0.0"
+#define H5_PACKAGE_STRING "HDF5 2.1.1"
 
 /* Define to the one symbol short name of this package. */
 #define H5_PACKAGE_TARNAME "hdf5"
@@ -427,7 +427,7 @@
 #define H5_PACKAGE_URL "https://www.hdfgroup.org"
 
 /* Define to the version of this package. */
-#define H5_PACKAGE_VERSION "2.0.0"
+#define H5_PACKAGE_VERSION "2.1.1"
 
 /* Determine the maximum decimal precision in C */
 #define H5_PAC_C_MAX_REAL_PRECISION 
@@ -630,7 +630,7 @@
 /* #undef H5_USING_MEMCHECKER */
 
 /* Version number of package */
-#define H5_VERSION "2.0.0"
+#define H5_VERSION "2.1.1"
 
 /* Data accuracy is preferred to speed during data conversions */
 #define H5_WANT_DATA_ACCURACY 1
