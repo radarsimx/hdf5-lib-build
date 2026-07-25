@@ -169,7 +169,7 @@ jobs:
       # - Attached to GitHub releases
       # - Combined with other architecture builds for universal binaries
       - name: "Archive built module"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: success()
         with:
           name: ${{ matrix.artifact }}

@@ -126,7 +126,7 @@ jobs:
       # - Used by other workflows/jobs as a dependency
       # - Attached to GitHub releases
       - name: "Archive built module"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: success()
         with:
           name: hdf5lib_win_x86_64
