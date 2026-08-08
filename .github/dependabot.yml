@@ -1,0 +1,33 @@
+version: 2
+
+# =============================================================================
+# Dependabot Configuration
+#
+# Keeps the GitHub Actions used by the release workflows
+# (.github/workflows/release_*.yml) up to date. Dependabot opens a pull request
+# whenever a newer version of a referenced action is published.
+#
+# Update Schedule:
+#   - Weekly, Mondays (UTC)
+#
+# Grouping:
+#   - All action updates are collected into a single pull request to avoid
+#     opening one PR per action.
+# =============================================================================
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
