@@ -77,7 +77,7 @@ jobs:
       # Retrieves the repository code including HDF5 source as a submodule.
       # The 'submodules: true' ensures HDF5 source code is properly fetched.
       - name: "Checkout repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: true
 
@@ -169,7 +169,7 @@ jobs:
       # - Attached to GitHub releases
       # - Combined with other architecture builds for universal binaries
       - name: "Archive built module"
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: success()
         with:
           name: ${{ matrix.artifact }}
