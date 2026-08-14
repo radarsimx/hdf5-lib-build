@@ -27,7 +27,7 @@
 #define H5_HAVE_VISUAL_STUDIO 1
 
 /* Define the default plugins path to compile */
-#define H5_DEFAULT_PLUGINDIR "C:/Program Files/HDF_Group/HDF5/2.1.1\\lib\\plugin;%ALLUSERSPROFILE%\\hdf5\\lib\\plugin"
+#define H5_DEFAULT_PLUGINDIR "C:/Program Files (x86)/hdf5_lib_build\\lib\\plugin;%ALLUSERSPROFILE%\\hdf5\\lib\\plugin"
 
 /* Define if your system is IBM ppc64le and cannot convert some long double
    values correctly. */
