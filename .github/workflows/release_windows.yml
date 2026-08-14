@@ -46,23 +46,22 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------------
-      # Step 1: Checkout repository with HDF5 source code
+      # Step 1: Checkout repository
       # -----------------------------------------------------------------------
-      # Retrieves the repository code including HDF5 source as a submodule.
-      # The 'submodules: true' ensures HDF5 source code is properly fetched.
+      # Retrieves the build scripts and CMake project. The HDF5 source itself is
+      # not part of the repository; CMake clones the pinned release during the
+      # configure step of the build below.
       - name: "Checkout repository"
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
       # -----------------------------------------------------------------------
       # Step 2: Build HDF5 libraries using build script
       # -----------------------------------------------------------------------
       # Executes the build.bat script which:
-      # 1. Checks for CMake availability and HDF5 source
-      # 2. Configures CMake with appropriate HDF5 build options
+      # 1. Checks for CMake and Git availability
+      # 2. Configures CMake, which fetches the pinned HDF5 release
       # 3. Compiles HDF5 libraries using MSVC in Release mode
-      # 4. Organizes output into structured directories
+      # 4. Stages headers and static libraries into .\output
       #
       # The script supports arguments: [clean] [debug]
       # Default behavior: Release build without cleaning

@@ -1,3 +1,0 @@
-[submodule "hdf5"]
-	path = hdf5
-	url = git@github.com:HDFGroup/hdf5.git
