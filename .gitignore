@@ -1,6 +1,7 @@
 
 /build
+/dist
+/output
 /hdf5
 /hdf5lib
-/output
 /release

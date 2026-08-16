@@ -1,191 +1,160 @@
-# HDF5-lib-build
+# RadarSimCpp prebuilt dependencies
 
-This directory contains scripts and GitHub Actions workflows for building HDF5 static libraries and headers for use with the radarsimpy project. The build system supports multiple platforms and architectures, including Ubuntu (x86_64), Windows (x86_64), and MacOS (x86_64, Apple Silicon).
+Builds the third-party static libraries that RadarSimCpp links, for every
+platform it ships on, so that a RadarSimCpp build never has to compile them.
 
-The HDF5 source code is **not** part of this repository. CMake downloads a pinned HDF5 release with `FetchContent` when the project is configured, so a plain checkout is all that is needed to build.
+> **Note on the repository name.** The remote is still called
+> `hdf5-lib-build`; it now covers every prebuilt dependency, not just HDF5.
+> Renaming it to `radarsimcpp-deps` only requires updating the `url` in the
+> consumer's `.gitmodules` — GitHub redirects the old name either way.
 
-## Contents
+None of the dependency source lives here. Each one is downloaded from a pinned
+release when the project is configured, so a plain checkout is all you need.
 
-- **CMakeLists.txt**: Top-level CMake project. Fetches the pinned HDF5 release, builds the static C/C++ libraries, and stages the result into `output/`.
-- **cmake/stage_hdf5.cmake**: Helper script that copies the built headers and libraries into the `output/` layout.
-- **build.sh**: Main build script for Unix-like systems (Linux, MacOS). Cleans, configures, and builds.
-- **build.bat**: Windows batch build script.
-- **GitHub Actions Workflows** (`.github/workflows/`):
-  - `release_ubuntu.yml`: Builds and archives HDF5 libraries for Ubuntu x86_64.
-  - `release_windows.yml`: Builds and archives HDF5 libraries for Windows x86_64.
-  - `release_macos.yml`: Builds and archives HDF5 libraries for both MacOS x86_64 and Apple Silicon (arm64).
-- **libs/**: Pre-built libraries (see below).
+## Dependencies
 
-## Pre-built Libraries
+| Dependency | Version pin | Used for | Needed when |
+|---|---|---|---|
+| HDF5 | `HDF5_GIT_TAG` (currently `2.1.1`) | Data I/O | Always |
+| mbedTLS | `MBEDTLS_VERSION` (currently `4.2.0`) | License verification | `-DENABLE_LICENSE=ON` |
 
-The `libs/` folder contains pre-built HDF5 static libraries for all supported platforms:
+Both pins live in the top-level `CMakeLists.txt`. Dependabot cannot track
+either one (a `FetchContent` Git tag and a release tarball URL), so bumping a
+version is a deliberate one-line edit followed by a CI run. For mbedTLS in
+particular that means **security updates are a manual step** — when a mbedTLS
+advisory lands, bump `MBEDTLS_VERSION`, cut a release, and update the consumer.
 
-### Directory Structure
+## Layout
 
 ```
-libs/
-├── include/                  # Common HDF5 C/C++ headers
-├── include_linux_x86_64/     # Linux-specific generated headers
-├── include_macos_arm64/      # macOS ARM64-specific generated headers
-├── include_macos_x86_64/     # macOS x86_64-specific generated headers
-├── include_win_x86_64/       # Windows-specific generated headers
-│
-├── lib_linux_x86_64/         # Linux x86_64 static libraries
-│   ├── libhdf5.a
-│   ├── libhdf5_cpp.a
-│   ├── libhdf5_hl.a
-│   └── libhdf5_hl_cpp.a
-│
-├── lib_macos_arm64/          # macOS Apple Silicon static libraries
-│   ├── libhdf5.a
-│   ├── libhdf5_cpp.a
-│   ├── libhdf5_hl.a
-│   └── libhdf5_hl_cpp.a
-│
-├── lib_macos_x86_64/         # macOS Intel static libraries
-│   ├── libhdf5.a
-│   ├── libhdf5_cpp.a
-│   ├── libhdf5_hl.a
-│   └── libhdf5_hl_cpp.a
-│
-└── lib_win_x86_64/           # Windows x86_64 static libraries
-    ├── libhdf5.lib
-    ├── libhdf5_cpp.lib
-    ├── libhdf5_hl.lib
-    └── libhdf5_hl_cpp.lib
+CMakeLists.txt          Superbuild: one ExternalProject per recipe
+build.sh / build.bat    Entry points
+verify.sh               Sanity check on the staged output
+cmake/
+  platform.cmake        Platform triplet (win_x86_64, linux_x86_64, macos_*)
+  baseline.cmake        The shared ABI baseline every dependency is built with
+  stage_hdf5.cmake      Copies HDF5 headers and libraries into output/
+  stage_mbedtls.cmake   Copies mbedTLS headers and libraries into output/
+  package_release.cmake Archives one staged dependency, with a SHA-256
+recipes/
+  hdf5/CMakeLists.txt   Fetches and builds HDF5
+  mbedtls/CMakeLists.txt Fetches and builds mbedTLS
+libs/                   Committed prebuilt libraries (see below)
+output/                 Staging area, gitignored
+dist/                   Release archives, gitignored
 ```
 
-### Library Descriptions
+Each recipe is a standalone CMake project built in its own cache. That is not
+cosmetic: HDF5 and mbedTLS both set global cache variables (`BUILD_TESTING`,
+`BUILD_SHARED_LIBS`, `ENABLE_PROGRAMS`) and both define generically named
+targets, so building them in one cache makes them fight. Adding a third
+dependency means adding `recipes/<name>/CMakeLists.txt`, a
+`cmake/stage_<name>.cmake`, and one `add_dep_recipe()` call.
 
-| Library | Description |
-|---------|-------------|
-| `libhdf5` | Core HDF5 C library |
-| `libhdf5_cpp` | HDF5 C++ wrapper library |
-| `libhdf5_hl` | HDF5 High-Level C API (simplified interface) |
-| `libhdf5_hl_cpp` | HDF5 High-Level C++ API |
+### Staged output
 
-### Platform Support
+Every dependency stages into the same shape, which is what lets the consumer
+resolve all of them with one function:
 
-| Platform | Architecture | Library Format | Runner | Compiler | Notes |
-|----------|--------------|----------------|--------|----------|-------|
-| Linux (Ubuntu 22.04) | x86_64 | `.a` (static) | `ubuntu-22.04` | GCC 11 (`gcc-11`/`g++-11`) | |
-| macOS | x86_64 (Intel) | `.a` (static) | `macos-26-intel` | Clang (`clang`/`clang++`) | Xcode 26.4.1 |
-| macOS | arm64 (Apple Silicon) | `.a` (static) | `macos-26` | Clang (`clang`/`clang++`) | Xcode 26.4.1 |
-| Windows | x86_64 | `.lib` (static) | `windows-2025` | MSVC | Visual Studio |
-
-## Usage
-
-### Using Pre-built Libraries
-
-The pre-built libraries in `libs/` are ready to use. In your CMake project:
-
-```cmake
-# Set platform-specific library path
-if(WIN32)
-    set(HDF5_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/lib_win_x86_64")
-    set(HDF5_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/include_win_x86_64")
-elseif(APPLE)
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-        set(HDF5_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/lib_macos_arm64")
-        set(HDF5_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/include_macos_arm64")
-    else()
-        set(HDF5_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/lib_macos_x86_64")
-        set(HDF5_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/include_macos_x86_64")
-    endif()
-else()
-    set(HDF5_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/lib_linux_x86_64")
-    set(HDF5_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/include_linux_x86_64")
-endif()
-
-# Include common headers
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/hdf5-lib-build/libs/include")
-include_directories("${HDF5_INCLUDE_DIR}")
-
-# Link libraries
-target_link_libraries(your_target
-    ${HDF5_LIB_DIR}/libhdf5_cpp${LIB_EXT}
-    ${HDF5_LIB_DIR}/libhdf5_hl_cpp${LIB_EXT}
-    ${HDF5_LIB_DIR}/libhdf5_hl${LIB_EXT}
-    ${HDF5_LIB_DIR}/libhdf5${LIB_EXT}
-)
+```
+output/<dep>/include/               Portable headers
+output/<dep>/include_<platform>/    Headers generated by the build (optional)
+output/<dep>/lib_<platform>/        Static libraries (.a / .lib)
 ```
 
-### Building from Source
+HDF5 has an `include_<platform>/` directory because `H5pubconf.h` is generated
+by platform probing. mbedTLS has none: its configuration comes from the build
+options forced here, which are identical on every platform.
 
-The build scripts support both Release (default) and Debug configurations.
+## The ABI baseline
 
-**Requirements:** CMake 3.26 or higher, Git, a C/C++ toolchain, and network access on the first configure (the HDF5 source is cloned at that point into `build/_deps/`).
+Prebuilt static libraries only work if they were compiled against the same ABI
+as whatever links them. `cmake/baseline.cmake` is the single place that is
+decided, and it is included by every recipe:
 
-#### Linux / MacOS
+- **Position independent code.** Everything ends up inside `radarsimcpp`, which
+  is a shared library, so every object must be PIC.
+- **`/MD` on MSVC** (`CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL`). RadarSimCpp
+  links the dynamic release CRT. Debug builds of RadarSimCpp therefore mix
+  `/MDd` objects with these `/MD` libraries, which is why the consumer passes
+  `/NODEFAULTLIB:MSVCRTD`. Building the deps `/MDd` would only move the problem
+  onto release builds, which are the ones that ship.
+- **Static only.** No shared objects, so a RadarSimCpp wheel has nothing extra
+  to carry at runtime.
+- **macOS deployment target** stays at the toolchain default unless
+  `DEPS_OSX_DEPLOYMENT_TARGET` is set. Set it if the wheels ever need to
+  support an older macOS than the CI runner's SDK defaults to; a prebuilt
+  library cannot be consumed by a build targeting an *older* OS than it was
+  compiled for.
+
+## Two ways to consume this
+
+The consumer (`radarsimcpp/cmake/PrebuiltDeps.cmake`) accepts either, in this
+order:
+
+1. **The committed `libs/` tree**, reached through the `deps` submodule. No
+   network at configure time. This is the default and the offline path.
+2. **A release archive**, downloaded and checksum-verified into a persistent
+   cache outside the build directory. Used when `libs/` has no directory for
+   the current platform, or when `RADARSIMCPP_DEPS_PREFER_DOWNLOAD=ON`.
+
+`libs/` keeps offline builds working; releases keep the repository from growing
+by tens of megabytes on every version bump. Over time, prefer moving new
+dependencies to releases only.
+
+## Building
+
+**Requirements:** CMake 3.26+, Git, a C/C++ toolchain, and network access on
+the first configure.
 
 ```sh
-chmod +x build.sh
-
-# Release build (default)
-./build.sh
-
-# Debug build
-./build.sh debug
-
-# Clean build
-./build.sh clean
-
-# Clean Debug build
-./build.sh clean debug
+# Linux / macOS
+chmod +x build.sh verify.sh
+./build.sh                    # Release build of everything
+./build.sh mbedtls            # Just mbedTLS
+./build.sh clean debug        # Clean Debug build
+./build.sh clean package      # Clean build, then archive into dist/
 ```
-
-#### Windows
 
 ```bat
-# Release build (default)
+REM Windows
 build.bat
-
-# Debug build
-build.bat debug
-
-# Clean build
-build.bat clean
-
-# Clean Debug build
+build.bat mbedtls
 build.bat clean debug
+build.bat clean package
 ```
 
-**Output:**
-- Release builds: `output/` directory
-- Debug builds: `output/` directory (with debug symbols included)
+Arguments may be given in any order. Naming one or more dependencies restricts
+the build to those; naming none builds everything.
 
-**Note:** Arguments can be provided in any order (e.g., `./build.sh debug clean` works the same as `./build.sh clean debug`).
-
-#### HDF5 Version
-
-The HDF5 release to build is pinned by the `HDF5_GIT_TAG` cache variable in `CMakeLists.txt` (currently `2.1.1`). To build a different release without editing the file, configure with an override:
+To override a version without editing `CMakeLists.txt`:
 
 ```sh
-cmake -S . -B build -DHDF5_GIT_TAG=2.2.0
+cmake -S . -B build -DMBEDTLS_VERSION=4.2.1
 cmake --build build --parallel
 ```
 
-To change the default, edit `HDF5_GIT_TAG` in `CMakeLists.txt`. Dependabot cannot track a `FetchContent` pin, so HDF5 version bumps are a manual one-line change.
+## Continuous integration
 
-### Continuous Integration
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `build.yml` | push / PR to `main`, manual | Builds every dependency on all four platforms, verifies the staged output, uploads it as an artifact |
+| `release.yml` | push of a `v*` tag, manual | Same, plus packaging; refuses to publish unless all four platforms produced both archives, then creates the GitHub release |
 
-GitHub Actions workflows are provided for automated builds on push or pull request to the `main` branch. Artifacts are uploaded for each platform and architecture.
+Platforms: `linux_x86_64` (ubuntu-22.04, GCC 11), `win_x86_64` (windows-2025,
+MSVC), `macos_x86_64` (macos-26-intel, Clang), `macos_arm64` (macos-26, Clang).
+The platform name a build stages into is derived from the runner by
+`cmake/platform.cmake`, not from the matrix entry, so the two cannot drift.
 
-#### Build Matrix
+## Cutting a release
 
-| Workflow | Platform | Artifact Name |
-|----------|----------|---------------|
-| `release_ubuntu.yml` | Ubuntu 22.04 x86_64 | `hdf5lib_ubuntu-22.04_x86_64` |
-| `release_windows.yml` | Windows x86_64 | `hdf5lib_win_x86_64` |
-| `release_macos.yml` | macOS x86_64 (Intel) | `hdf5lib_macos_x86_64` |
-| `release_macos.yml` | macOS arm64 (Apple Silicon) | `hdf5lib_macos_arm64` |
-
-## Customization
-
-- Edit `CMakeLists.txt` to adjust HDF5 build options, the pinned version, or add dependencies as needed.
-- Edit `cmake/stage_hdf5.cmake` to change which headers and libraries end up in `output/`.
-- Update workflow files in `.github/workflows/` to add more platforms or change build matrix settings.
-
----
-
-For more details, see the comments in each script and workflow file.
+1. Bump the version pin in `CMakeLists.txt`, open a PR, let `build.yml` prove
+   it builds everywhere.
+2. Merge, then push a tag: `git tag v2025.08.16 && git push origin v2025.08.16`.
+3. `release.yml` publishes `<dep>-<version>-<platform>.tar.gz` plus a `.sha256`
+   for each.
+4. In RadarSimCpp, update `cmake/deps_manifest.cmake`: set `DEPS_RELEASE_TAG`
+   to the new tag, the dependency version, and paste the checksums (they are
+   printed in the workflow run summary).
+5. If you also want the committed fallback refreshed, download the artifacts
+   and replace the matching directories under `libs/`.

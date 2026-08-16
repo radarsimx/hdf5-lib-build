@@ -1,0 +1,159 @@
+name: "Publish prebuilt dependency release"
+
+# =============================================================================
+# Builds every dependency on every platform, packages each one as a
+# per-platform tarball with a SHA-256 checksum, and attaches the result to a
+# GitHub release.
+#
+# This is the producer half of RadarSimCpp's download path: the consumer pins
+# the tag and the checksums in cmake/deps_manifest.cmake and refuses an archive
+# whose hash does not match, so publishing here is what makes a bump possible
+# without committing binaries.
+#
+# Triggers:
+#   - push of a tag matching v* (e.g. v2025.08.16)
+#   - workflow_dispatch with an explicit tag, for a dry run
+#
+# After the release is published, bump radarsimcpp's cmake/deps_manifest.cmake:
+# set DEPS_RELEASE_TAG to the new tag and paste in the checksums from the job
+# summary (or from the .sha256 files attached to the release).
+# =============================================================================
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (must already exist)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: "Package (${{ matrix.platform }})"
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # A partial release is worse than no release, but failing fast would
+      # hide whether the break is platform-specific. Build all, gate below.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_x86_64
+            runner: ubuntu-22.04
+            c_compiler: gcc-11
+            cxx_compiler: g++-11
+          - platform: win_x86_64
+            runner: windows-2025
+          - platform: macos_x86_64
+            runner: macos-26-intel
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '26.4.1'
+          - platform: macos_arm64
+            runner: macos-26
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '26.4.1'
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: "Setup Xcode"
+        if: startsWith(matrix.runner, 'macos')
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode_version }}
+
+      - name: "Build and package (Unix)"
+        if: runner.os != 'Windows'
+        env:
+          CC: ${{ matrix.c_compiler }}
+          CXX: ${{ matrix.cxx_compiler }}
+        run: |
+          chmod +x build.sh verify.sh
+          ./build.sh clean package
+
+      - name: "Build and package (Windows)"
+        if: runner.os == 'Windows'
+        run: .\build.bat clean package
+
+      - name: "Verify staged output"
+        shell: bash
+        run: ./verify.sh "${{ matrix.platform }}"
+
+      # Surfaced in the run summary so the checksums can be copied into the
+      # consumer's manifest without downloading anything.
+      - name: "Report checksums"
+        shell: bash
+        run: |
+          {
+            echo "### ${{ matrix.platform }}"
+            echo ""
+            echo '```'
+            cat dist/*.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Upload packaged archives"
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist_${{ matrix.platform }}
+          path: ./dist
+          retention-days: 14
+
+  publish:
+    name: "Publish release"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download all platform archives"
+        uses: actions/download-artifact@v7
+        with:
+          pattern: dist_*
+          merge-multiple: true
+          path: dist
+
+      # Four platforms, two dependencies each: anything less means a consumer
+      # on the missing platform would get a download failure instead of a
+      # library, so refuse to publish a partial set.
+      - name: "Check the set is complete"
+        run: |
+          set -euo pipefail
+          missing=0
+          for platform in linux_x86_64 win_x86_64 macos_x86_64 macos_arm64; do
+            for dep in hdf5 mbedtls; do
+              if ! ls dist/${dep}-*-${platform}.tar.gz >/dev/null 2>&1; then
+                echo "ERROR: missing archive for ${dep} on ${platform}" >&2
+                missing=1
+              fi
+            done
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          echo "=== Release contents ==="
+          ls -lh dist
+          cat dist/*.sha256
+
+      - name: "Create GitHub release"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: |
+            dist/*.tar.gz
+            dist/*.sha256
+          body: |
+            Prebuilt static libraries for RadarSimCpp.
+
+            Each archive extracts to `include/`, `include_<platform>/` and
+            `lib_<platform>/`, which is the layout
+            `setup_prebuilt_dep()` expects.
+
+            To consume this release, set `DEPS_RELEASE_TAG` in radarsimcpp's
+            `cmake/deps_manifest.cmake` to this tag and paste in the SHA-256
+            values from the attached `.sha256` files.

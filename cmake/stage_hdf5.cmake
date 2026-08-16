@@ -1,8 +1,9 @@
 # -----------------------------------------------------------------------------
 # stage_hdf5.cmake - collect HDF5 headers and static libraries
 # -----------------------------------------------------------------------------
-# Run with `cmake -P` from the `stage` target defined in the top-level
-# CMakeLists.txt. Expects the following variables to be passed with -D:
+# Run with `cmake -P` from the `stage` target defined in
+# recipes/hdf5/CMakeLists.txt. Expects the following variables to be passed
+# with -D:
 #
 #   HDF5_SOURCE_DIR - HDF5 source tree (build/_deps/hdf5-src)
 #   HDF5_BUILD_DIR  - HDF5 binary tree (build/_deps/hdf5-build)
