@@ -3,10 +3,10 @@
 Builds the third-party static libraries that RadarSimCpp links, for every
 platform it ships on, so that a RadarSimCpp build never has to compile them.
 
-> **Note on the repository name.** The remote is still called
-> `hdf5-lib-build`; it now covers every prebuilt dependency, not just HDF5.
-> Renaming it to `radarsimcpp-deps` only requires updating the `url` in the
-> consumer's `.gitmodules` — GitHub redirects the old name either way.
+> **Renamed from `hdf5-lib-build`.** GitHub redirects the old URL, so existing
+> clones keep working, but run `git remote set-url origin
+> git@github.com:radarsimx/radarsimx-deps.git` to stop relying on it. In
+> RadarSimCpp the equivalent is `git submodule sync --recursive`.
 
 None of the dependency source lives here. Each one is downloaded from a pinned
 release when the project is configured, so a plain checkout is all you need.
