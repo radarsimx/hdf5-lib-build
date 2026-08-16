@@ -1,0 +1,104 @@
+name: "Build prebuilt dependencies"
+
+# =============================================================================
+# Builds every prebuilt dependency (HDF5, mbedTLS) on every supported platform
+# and uploads the staged result as a workflow artifact.
+#
+# This is the continuous-integration workflow: it proves that the pinned
+# versions still build everywhere. It does not publish anything. To cut a
+# release, push a tag and let release.yml do it.
+#
+# Triggers:
+#   - push / pull_request against main
+#   - workflow_dispatch, for testing a version bump before merging it
+#
+# One job per platform; the platform name a build stages into is derived by
+# cmake/platform.cmake from the runner, not from the matrix entry, so the two
+# cannot drift apart.
+# =============================================================================
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Build (${{ matrix.platform }})"
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # Keep going after one platform fails: knowing whether a version bump
+      # breaks one platform or all four is the useful signal.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_x86_64
+            runner: ubuntu-22.04
+            c_compiler: gcc-11
+            cxx_compiler: g++-11
+          - platform: win_x86_64
+            runner: windows-2025
+          - platform: macos_x86_64
+            runner: macos-26-intel
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '26.4.1'
+          - platform: macos_arm64
+            runner: macos-26
+            c_compiler: clang
+            cxx_compiler: clang++
+            xcode_version: '26.4.1'
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Checkout
+      # -----------------------------------------------------------------------
+      # Only the build scripts and CMake projects live here. Every dependency's
+      # source is downloaded during the configure step below.
+      - name: "Checkout repository"
+        uses: actions/checkout@v7
+
+      - name: "Setup Xcode"
+        if: startsWith(matrix.runner, 'macos')
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode_version }}
+
+      # -----------------------------------------------------------------------
+      # Build
+      # -----------------------------------------------------------------------
+      - name: "Build dependencies (Unix)"
+        if: runner.os != 'Windows'
+        env:
+          CC: ${{ matrix.c_compiler }}
+          CXX: ${{ matrix.cxx_compiler }}
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: "Build dependencies (Windows)"
+        if: runner.os == 'Windows'
+        run: .\build.bat
+
+      # -----------------------------------------------------------------------
+      # Verify
+      # -----------------------------------------------------------------------
+      # Catches the failure mode where a build "succeeds" but stages nothing,
+      # which would otherwise surface as a link error in RadarSimCpp much later.
+      - name: "Verify staged output"
+        shell: bash
+        run: ./verify.sh "${{ matrix.platform }}"
+
+      # -----------------------------------------------------------------------
+      # Upload
+      # -----------------------------------------------------------------------
+      - name: "Archive staged output"
+        uses: actions/upload-artifact@v7
+        if: success()
+        with:
+          name: deps_${{ matrix.platform }}
+          path: ./output
+          retention-days: 14
+          compression-level: 6
