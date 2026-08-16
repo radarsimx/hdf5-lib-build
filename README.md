@@ -109,7 +109,6 @@ the first configure.
 
 ```sh
 # Linux / macOS
-chmod +x build.sh verify.sh
 ./build.sh                    # Release build of everything
 ./build.sh mbedtls            # Just mbedTLS
 ./build.sh clean debug        # Clean Debug build

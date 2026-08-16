@@ -76,17 +76,18 @@ jobs:
         env:
           CC: ${{ matrix.c_compiler }}
           CXX: ${{ matrix.cxx_compiler }}
-        run: |
-          chmod +x build.sh verify.sh
-          ./build.sh clean package
+        run: ./build.sh clean package
 
       - name: "Build and package (Windows)"
         if: runner.os == 'Windows'
         run: .\build.bat clean package
 
+      # Invoked as `bash verify.sh` rather than `./verify.sh` because this step
+      # also runs on the Windows runner, where the executable bit is not a
+      # filesystem property.
       - name: "Verify staged output"
         shell: bash
-        run: ./verify.sh "${{ matrix.platform }}"
+        run: bash verify.sh "${{ matrix.platform }}"
 
       # Surfaced in the run summary so the checksums can be copied into the
       # consumer's manifest without downloading anything.

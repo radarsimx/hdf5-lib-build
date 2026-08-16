@@ -74,9 +74,7 @@ jobs:
         env:
           CC: ${{ matrix.c_compiler }}
           CXX: ${{ matrix.cxx_compiler }}
-        run: |
-          chmod +x build.sh
-          ./build.sh
+        run: ./build.sh
 
       - name: "Build dependencies (Windows)"
         if: runner.os == 'Windows'
@@ -87,9 +85,12 @@ jobs:
       # -----------------------------------------------------------------------
       # Catches the failure mode where a build "succeeds" but stages nothing,
       # which would otherwise surface as a link error in RadarSimCpp much later.
+      # Invoked as `bash verify.sh` rather than `./verify.sh` because this step
+      # also runs on the Windows runner, where the executable bit is not a
+      # filesystem property.
       - name: "Verify staged output"
         shell: bash
-        run: ./verify.sh "${{ matrix.platform }}"
+        run: bash verify.sh "${{ matrix.platform }}"
 
       # -----------------------------------------------------------------------
       # Upload
