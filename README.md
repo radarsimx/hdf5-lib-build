@@ -3,10 +3,9 @@
 Builds the third-party static libraries that RadarSimCpp links, for every
 platform it ships on, so that a RadarSimCpp build never has to compile them.
 
-> **Note on the repository name.** The remote is still called
-> `hdf5-lib-build`; it now covers every prebuilt dependency, not just HDF5.
-> Renaming it to `radarsimcpp-deps` only requires updating the `url` in the
-> consumer's `.gitmodules` — GitHub redirects the old name either way.
+> **Renamed from `hdf5-lib-build`** once this repository grew beyond HDF5. See
+> [Migrating an existing clone](#migrating-an-existing-clone) if you cloned
+> before the rename; fresh clones need nothing.
 
 None of the dependency source lives here. Each one is downloaded from a pinned
 release when the project is configured, so a plain checkout is all you need.
@@ -157,3 +156,40 @@ The platform name a build stages into is derived from the runner by
    printed in the workflow run summary).
 5. If you also want the committed fallback refreshed, download the artifacts
    and replace the matching directories under `libs/`.
+
+## Migrating an existing clone
+
+This repository was renamed `hdf5-lib-build` → `radarsimx-deps`, and in
+RadarSimCpp the submodule's path and section name both became `deps`. Fresh
+clones and CI are unaffected — git creates everything from the name in
+`.gitmodules`. Only a working tree that predates the rename needs attention.
+
+**Cloned this repository directly:**
+
+```sh
+git remote set-url origin git@github.com:radarsimx/radarsimx-deps.git
+```
+
+GitHub redirects the old URL, so this is housekeeping rather than a repair.
+
+**Cloned RadarSimCpp:** the submodule's git directory is at
+`.git/modules/.../hdf5-lib-build`, and git now looks for `.../deps`. From the
+RadarSimCpp checkout:
+
+```sh
+MODULES=$(git rev-parse --git-dir)/modules
+mv "$MODULES/hdf5-lib-build" "$MODULES/deps"
+printf 'gitdir: %s/modules/deps\n' "$(git rev-parse --git-dir)" > deps/.git
+git config -f "$(git rev-parse --git-dir)/config" \
+    --rename-section submodule.hdf5-lib-build submodule.deps
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
+`core.worktree` inside the module needs no edit: it is relative, and renaming
+the leaf directory does not change its depth. Verify with `git submodule
+status`, which should report `deps` at the expected commit with no `+` or `-`
+prefix.
+
+Starting over is always an option too — delete the old module directory and the
+`deps/` checkout, then `git submodule update --init --recursive` re-clones it.
